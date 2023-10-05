@@ -6,29 +6,23 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/RonaldoSetzer/todo-api-go/internal/domain"
+	"github.com/RonaldoSetzer/todo-api-go/internal/infrastructure"
 )
-
-type Todo struct {
-	ID          int    `json:"id"`
-	Title       string `json:"title"`
-	Description string `json:"description"`
-	Status      string `json:"status"`
-}
-
-const (
-	DO    = "do"
-	DONE  = "done"
-	DOING = "doing"
-)
-
-var todos = []Todo{
-	{1, "Study Golang", "Study Golang everyday", DO},
-	{2, "Study React", "Study React everyday", DO},
-	{3, "Study Vue", "Study Vue everyday", DO},
-	{4, "Study Flutter", "Study Flutter everyday", DO},
-}
 
 func main() {
+	localRepository := infrastructure.NewLocalRepository()
+  localRepository.AddTodo(
+    domain.Todo{ Title: "First Todo", Description: "This is the first todo", Status: domain.DO, },
+  )
+  localRepository.AddTodo(
+    domain.Todo{ Title: "Second Todo", Description: "This is the second todo", Status: domain.DO, },
+  )
+  localRepository.AddTodo(
+    domain.Todo{ Title: "Third Todo", Description: "This is the third todo", Status: domain.DO, },
+  )
+
 	http.HandleFunc("/todos/", func(w http.ResponseWriter, r *http.Request) {
 		path := r.URL.Path
 		segments := strings.Split(path, "/")
@@ -36,23 +30,38 @@ func main() {
 		switch r.Method {
 		case http.MethodGet:
 			if len(segments) < 3 || segments[2] == "" {
-				handleGetTodos(w)
+        todos, err := localRepository.GetTodos()
+        if err != nil {
+          http.Error(w, err.Error(), http.StatusInternalServerError)
+          return
+        }
+				printTodos(todos, "GetTodos", w)
 			} else {
 				id, err := strconv.Atoi(segments[2])
 				if err != nil {
 					http.Error(w, "Invalid ID", http.StatusBadRequest)
 					return
 				}
-				handleGetTodo(id, w)
+				todo, err := localRepository.GetTodoById(id)
+        if err != nil {
+          http.Error(w, err.Error(), http.StatusInternalServerError)
+          return
+        }
+        printTodos([]domain.Todo{todo}, "GetTodoById", w)
 			}
 
 		case http.MethodPost:
-			var todo Todo
-			if err := json.NewDecoder(r.Body).Decode(&todo); err != nil {
+			var newTodo domain.Todo
+			if err := json.NewDecoder(r.Body).Decode(&newTodo); err != nil {
 				http.Error(w, err.Error(), http.StatusBadRequest)
 				return
 			}
-			handleAddTodo(todo, w)
+      todo, err := localRepository.AddTodo(newTodo)
+			if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+      }
+      printTodos([]domain.Todo{todo}, "AddTodo", w)
 
 		case http.MethodPut:
 			if len(segments) < 3 || segments[2] == "" {
@@ -63,13 +72,18 @@ func main() {
 					http.Error(w, "Invalid ID", http.StatusBadRequest)
 					return
 				}
-				var todo Todo
-				if err := json.NewDecoder(r.Body).Decode(&todo); err != nil {
+				var newTodo domain.Todo
+				if err := json.NewDecoder(r.Body).Decode(&newTodo); err != nil {
 					http.Error(w, err.Error(), http.StatusBadRequest)
 					return
 				}
-				todo.ID = id
-				handleUpdateTodo(todo, w)
+        newTodo.ID = id
+        todo, err := localRepository.UpdateTodo(newTodo)
+        if err != nil {
+          http.Error(w, err.Error(), http.StatusInternalServerError)
+          return
+        }
+        printTodos([]domain.Todo{todo}, "UpdateTodo", w)
 			}
 
 		case http.MethodDelete:
@@ -77,11 +91,16 @@ func main() {
 				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 			} else {
 				id, err := strconv.Atoi(segments[2])
+				if err != nil {
+					http.Error(w, "Invalid ID", http.StatusBadRequest)
+					return
+				}
+				todo, err := localRepository.DeleteTodo(id)
         if err != nil {
-          http.Error(w, "Invalid ID", http.StatusBadRequest)
+          http.Error(w, err.Error(), http.StatusInternalServerError)
           return
         }
-				handleDeleteTodo(id, w)
+        printTodos([]domain.Todo{todo}, "DeleteTodo", w)
 			}
 		default:
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -90,48 +109,8 @@ func main() {
 	http.ListenAndServe(":8080", nil)
 }
 
-func handleUpdateTodo(todo Todo, w http.ResponseWriter) {
-	fmt.Fprintf(w, "Update Todo %s", todo.Title)
-	for i, t := range todos {
-		if t.ID == todo.ID {
-			todos[i] = todo
-			break
-		}
-	}
-}
-
-func handleDeleteTodo(id int, w http.ResponseWriter) {
-	fmt.Fprintf(w, "Delete Todo %d", id)
-	for i, todo := range todos {
-		if todo.ID == id {
-			todos = append(todos[:i], todos[i+1:]...)
-			break
-		}
-	}
-}
-
-func handleAddTodo(todo Todo, w http.ResponseWriter) {
-	fmt.Fprintf(w, "Add Todo %s", todo.Title)
-	todo.ID = len(todos) + 1
-	todos = append(todos, todo)
-}
-
-func handleGetTodo(id int, w http.ResponseWriter) {
-	fmt.Fprintf(w, "Todo %d", id)
-
-	var todo Todo
-	for _, t := range todos {
-		if t.ID == id {
-			todo = t
-			break
-		}
-	}
-
-	fmt.Fprintf(w, "%d. %s - %s - %s\n", todo.ID, todo.Title, todo.Description, todo.Status)
-}
-
-func handleGetTodos(w http.ResponseWriter) {
-	fmt.Fprintln(w, "Todo List")
+func printTodos(todos []domain.Todo, title string, w http.ResponseWriter) {
+	fmt.Fprintln(w, title)
 	for _, todo := range todos {
 		fmt.Fprintf(w, "%d. %s - %s - %s\n", todo.ID, todo.Title, todo.Description, todo.Status)
 	}
