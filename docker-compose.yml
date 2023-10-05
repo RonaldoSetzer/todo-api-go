@@ -1,0 +1,24 @@
+version: '3'
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./cmd/server:/app/cmd/server
+
+  dev-app:
+    container_name: dev
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "8081:8080"
+    volumes:
+      - ./:/app
+    environment:
+      - ENVIRONMENT=development
+    depends_on:
+      - app

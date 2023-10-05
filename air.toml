@@ -1,0 +1,10 @@
+[build]
+cmd = "go build -o tmp/main ./cmd/server"
+root = "."
+exclude_dir = ["tmp"]
+
+[[watcher]]
+watch = "cmd"
+include_ext = ["go"]
+exclude_file = ["tmp/*"]
+
