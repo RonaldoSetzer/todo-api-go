@@ -4,31 +4,20 @@ import (
 	"net/http"
 
 	"github.com/RonaldoSetzer/todo-api-go/internal/application"
-	"github.com/RonaldoSetzer/todo-api-go/internal/domain"
-	"github.com/RonaldoSetzer/todo-api-go/internal/infrastructure"
 	"github.com/gorilla/mux"
 )
 
 func main() {
-	localRepository := infrastructure.NewLocalRepository()
-	localRepository.AddTodo(domain.Todo{ID: 1, Title: "Todo 1", Description: "Description 1", Status: "DO"})
-	localRepository.AddTodo(domain.Todo{ID: 2, Title: "Todo 2", Description: "Description 2", Status: "DO"})
-	localRepository.AddTodo(domain.Todo{ID: 3, Title: "Todo 3", Description: "Description 3", Status: "DO"})
-
-	addTodoUseCase := application.NewAddTodoUseCase(localRepository)
-	getTodosUseCase := application.NewGetTodosUseCase(localRepository)
-  getTodoUseCase := application.NewGetTodoUseCase(localRepository)
-	updateTodoUseCase := application.NewUpdateTodoUseCase(localRepository)
-	deleteTodoUseCase := application.NewDeleteTodoUseCase(localRepository)
+  builder := application.NewApplicationBuilder()
+  app := builder.Build()
 
 	router := mux.NewRouter()
 
-	todoHandler := application.NewTodoHandler(addTodoUseCase, getTodosUseCase, getTodoUseCase, updateTodoUseCase, deleteTodoUseCase)
-	router.HandleFunc("/todos", todoHandler.HandleAddTodoRequest).Methods("POST")
-	router.HandleFunc("/todos", todoHandler.HandleGetTodosRequest).Methods("GET")
-  router.HandleFunc("/todos/{id}", todoHandler.HandleGetTodoRequest).Methods("GET")
-	router.HandleFunc("/todos/{id}", todoHandler.HandleUpdateTodoRequest).Methods("PUT")
-	router.HandleFunc("/todos/{id}", todoHandler.HandleDeleteTodoRequest).Methods("DELETE")
+	router.HandleFunc("/todos", app.TodoHandler.HandleAddTodoRequest).Methods("POST")
+  router.HandleFunc("/todos", app.TodoHandler.HandleGetTodosRequest).Methods("GET")
+  router.HandleFunc("/todos/{id}", app.TodoHandler.HandleGetTodoRequest).Methods("GET")
+  router.HandleFunc("/todos/{id}", app.TodoHandler.HandleUpdateTodoRequest).Methods("PUT")
+  router.HandleFunc("/todos/{id}", app.TodoHandler.HandleDeleteTodoRequest).Methods("DELETE")
 
 	http.Handle("/", router)
 	http.ListenAndServe(":8080", router)
