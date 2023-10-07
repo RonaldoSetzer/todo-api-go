@@ -10,6 +10,7 @@ func NewAddTodoUseCase(repository domain.Repository) *AddTodoUseCase {
 	return &AddTodoUseCase{repository: repository}
 }
 
-func (u *AddTodoUseCase) Execute(todo domain.Todo) (domain.Todo, error) {
-	return u.repository.AddTodo(todo)
+func (u *AddTodoUseCase) Execute(title string, description string) (domain.Todo, error) {
+  todo := domain.NewTodo(title, description)
+	return u.repository.AddTodo(*todo)
 }

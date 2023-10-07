@@ -3,10 +3,10 @@ package application
 import (
 	"encoding/json"
 	"net/http"
-	"strconv"
 	"strings"
 
 	"github.com/RonaldoSetzer/todo-api-go/internal/domain"
+	"github.com/google/uuid"
 )
 
 type TodoHandler struct {
@@ -34,14 +34,14 @@ func NewTodoHandler(
 }
 
 func (h *TodoHandler) HandleAddTodoRequest(w http.ResponseWriter, r *http.Request) {
-	var newTodo domain.Todo
+	var todo domain.TodoDTO
 	decoder := json.NewDecoder(r.Body)
-	if err := decoder.Decode(&newTodo); err != nil {
+	if err := decoder.Decode(&todo); err != nil {
 		http.Error(w, "Invalid request payload", http.StatusBadRequest)
 		return
 	}
 
-	createdTodo, err := h.addTodoUseCase.Execute(newTodo)
+	createdTodo, err := h.addTodoUseCase.Execute(todo.Title, todo.Description)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -63,28 +63,34 @@ func (h *TodoHandler) HandleGetTodosRequest(w http.ResponseWriter, r *http.Reque
 }
 
 func (h *TodoHandler) HandleUpdateTodoRequest(w http.ResponseWriter, r *http.Request) {
-	var updatedTodo domain.Todo
+	path := r.URL.Path
+	segments := strings.Split(path, "/")
+	todoID, err := uuid.Parse(segments[len(segments)-1])
+	if err != nil {
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		return
+	}
+	var todoDto domain.TodoDTO
 	decoder := json.NewDecoder(r.Body)
-	if err := decoder.Decode(&updatedTodo); err != nil {
+	if err := decoder.Decode(&todoDto); err != nil {
 		http.Error(w, "Invalid request payload", http.StatusBadRequest)
 		return
 	}
 
-	todo, err := h.updateTodoUseCase.Execute(updatedTodo)
+	updateTodo, err := h.updateTodoUseCase.Execute(todoID,todoDto)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(todo)
+	json.NewEncoder(w).Encode(updateTodo)
 }
 
 func (h *TodoHandler) HandleDeleteTodoRequest(w http.ResponseWriter, r *http.Request) {
 	path := r.URL.Path
 	segments := strings.Split(path, "/")
-	todoID, err := strconv.Atoi(segments[len(segments)-1])
-
+	todoID, err := uuid.Parse(segments[len(segments)-1])
 	if err != nil {
 		http.Error(w, "Invalid request payload", http.StatusBadRequest)
 		return
@@ -103,13 +109,11 @@ func (h *TodoHandler) HandleDeleteTodoRequest(w http.ResponseWriter, r *http.Req
 func (h *TodoHandler) HandleGetTodoRequest(w http.ResponseWriter, r *http.Request) {
 	path := r.URL.Path
 	segments := strings.Split(path, "/")
-	todoID, err := strconv.Atoi(segments[len(segments)-1])
-
+	todoID, err := uuid.Parse(segments[len(segments)-1])
 	if err != nil {
 		http.Error(w, "Invalid request payload", http.StatusBadRequest)
 		return
 	}
-
 	todo, err := h.getTodoUseCase.Execute(todoID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
