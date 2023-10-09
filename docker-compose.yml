@@ -1,5 +1,24 @@
 version: '3'
 services:
+  db:
+    image: postgres
+    environment:
+      POSTGRES_DB: todo_db
+      POSTGRES_USER: todouser
+      POSTGRES_PASSWORD: todopassword
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+
+  flyway:
+    image: flyway/flyway:latest
+    volumes:
+      - ./flyway/sql:/flyway/sql
+      - ./flyway/conf:/flyway/conf
+    command: ["-url=jdbc:postgresql://db:5432/todo_db", "-user=todouser", "-password=todopassword", "migrate"]
+    depends_on:
+      - db
   app:
     build:
       context: .
@@ -8,6 +27,8 @@ services:
       - "8080:8080"
     volumes:
       - ./cmd/server:/app/cmd/server
+    depends_on:
+      - db
 
   dev-app:
     container_name: dev
@@ -22,3 +43,7 @@ services:
       - ENVIRONMENT=development
     depends_on:
       - app
+      - db
+volumes:
+  pg_data:
+
