@@ -10,6 +10,6 @@ func NewGetTodosUseCase(repository domain.Repository) *GetTodosUseCase {
 	return &GetTodosUseCase{repository: repository}
 }
 
-func (u *GetTodosUseCase) Execute() ([]domain.Todo, error) {
+func (u *GetTodosUseCase) Execute() ([]domain.TodoDTO, error) {
 	return u.repository.GetTodos()
 }

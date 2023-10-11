@@ -13,6 +13,6 @@ func NewDeleteTodoUseCase(repository domain.Repository) *DeleteTodoUseCase {
 	return &DeleteTodoUseCase{repository: repository}
 }
 
-func (u *DeleteTodoUseCase) Execute(todoID uuid.UUID) (domain.Todo, error) {
+func (u *DeleteTodoUseCase) Execute(todoID uuid.UUID) (domain.TodoDTO, error) {
 	return u.repository.DeleteTodo(todoID)
 }

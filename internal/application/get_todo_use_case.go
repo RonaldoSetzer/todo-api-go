@@ -13,6 +13,6 @@ func NewGetTodoUseCase(repository domain.Repository) *GetTodoUseCase {
 	return &GetTodoUseCase{repository: repository}
 }
 
-func (g *GetTodoUseCase) Execute(id uuid.UUID) (domain.Todo, error) {
+func (g *GetTodoUseCase) Execute(id uuid.UUID) (domain.TodoDTO, error) {
 	return g.repository.GetTodoById(id)
 }
