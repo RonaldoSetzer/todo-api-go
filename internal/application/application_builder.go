@@ -9,13 +9,13 @@ func NewApplicationBuilder() *ApplicationBuilder {
 }
 
 func (builder *ApplicationBuilder) Build() *Application {
-	localRepository := infrastructure.NewLocalRepository()
+	repository := infrastructure.NewPostgresRepository()
 
-	addTodoUseCase := NewAddTodoUseCase(localRepository)
-	getTodoUseCase := NewGetTodoUseCase(localRepository)
-	getTodosUseCase := NewGetTodosUseCase(localRepository)
-	updateTodoUseCase := NewUpdateTodoUseCase(localRepository)
-	deleteTodoUseCase := NewDeleteTodoUseCase(localRepository)
+	addTodoUseCase := NewAddTodoUseCase(repository)
+	getTodoUseCase := NewGetTodoUseCase(repository)
+	getTodosUseCase := NewGetTodosUseCase(repository)
+	updateTodoUseCase := NewUpdateTodoUseCase(repository)
+	deleteTodoUseCase := NewDeleteTodoUseCase(repository)
 
 	todoHandler := NewTodoHandler(addTodoUseCase, getTodosUseCase, getTodoUseCase, updateTodoUseCase, deleteTodoUseCase)
 

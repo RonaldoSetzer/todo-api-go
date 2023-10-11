@@ -4,6 +4,7 @@ go mod init github.com/RonaldoSetzer/todo-api-go
 // Go GET
 go get -u github.com/gorilla/mux
 go get -u github.com/google/uuid
+go get github.com/lib/pq
 go mod tidy
 
 // Docker
@@ -28,18 +29,19 @@ curl -X POST \
 
 curl -X GET http://localhost:8081/todos
 
-curl -X GET http://localhost:8081/todos/240a368c-1c46-4a2f-a048-2f740ce2baa7
+curl -X GET http://localhost:8081/todos/6ff75fee-2439-44bd-8a4c-5d9fb357a462
 
 curl -X PUT \
   -H "Content-Type: application/json" \
-  -d '{"title":"Updated todo", "description":"Updated todo description", "status":"done"}' \
-  http://localhost:8081/todos/240a368c-1c46-4a2f-a048-2f740ce2baa7"
+  -d '{"title":"Updated todo", "description":"Updated todo description", "status":"DONE"}' \
+  http://localhost:8081/todos/240a368c-1c46-4a2f-a048-2f740ce2baa7
 
-
-curl -X PUT \ 
+curl -X PUT \
   -H "Content-Type: application/json" \
   -d '{"title":"Updated todo", "description":"Updated todo description", "status":"DONE"}' \
-  http://localhost:8081/todos/195ef1d3-bc6d-432c-b65f-69db59d59031
+  http://localhost:8081/todos/6ff75fee-2439-44bd-8a4c-5d9fb357a462
 
+
+curl -X DELETE http://localhost:8081/todos/16a8a68b-beab-4a58-a712-7fd78da91770
 //connect to a postgres with psql
 psql -h localhost -p 5432 -U postgres -d todo-api-go

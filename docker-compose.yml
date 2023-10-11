@@ -29,6 +29,7 @@ services:
       - ./cmd/server:/app/cmd/server
     depends_on:
       - db
+      - flyway
 
   dev-app:
     container_name: dev

@@ -1,5 +1,5 @@
 -- V1__create_todo_table.sql
-CREATE TABLE IF NOT EXISTS todo (
+CREATE TABLE IF NOT EXISTS todos (
     id uuid PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
     description TEXT,
